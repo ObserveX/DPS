@@ -3,47 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynatrace Platform Subscription (DPS) Estimator & Rate Manager</title>
+  <title>DPS Cost Calculator — Dynatrace Platform Subscription</title>
   <style>
     :root {
-      --bg: #0b1329;
-      --panel-bg: #131f37;
-      --card-bg: #1c2b4a;
-      --border: #2d4168;
-      --accent: #0080ff;
-      --accent-hover: #0066cc;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --success: #10b981;
-      --markup-color: #f59e0b;
-      --highlight: #38bdf8;
-      --badge-bg: #0f2744;
-      --danger: #ef4444;
+      --bg-page: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-sub: #94a3b8;
+      
+      --purple-formula-bg: #f5f3ff;
+      --purple-formula-border: #ede9fe;
+      --purple-formula-text: #6b21a8;
+      
+      --purple-cost: #581c87;
+      --purple-summary-bg: #2e1065;
+      --teal-total: #2dd4bf;
+      
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.4;
-      padding: 20px;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 60px;
     }
 
-    .container {
-      max-width: 1440px;
-      margin: 0 auto;
-    }
-
+    /* Top Navigation */
     header {
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 20px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 12px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .nav-container {
+      max-width: 1320px;
+      margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -51,342 +60,407 @@
       gap: 16px;
     }
 
-    h1 {
-      font-size: 1.55rem;
-      color: #fff;
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-
-    .commercial-bar {
+    .brand {
       display: flex;
-      gap: 14px;
-      background-color: var(--panel-bg);
-      padding: 12px 18px;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      background: #6d28d9;
+      color: #ffffff;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .commercial-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
     }
 
-    .commercial-item label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text);
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
     }
 
-    .commercial-item input {
-      width: 70px;
-      padding: 5px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: #0b1329;
-      color: #fff;
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-align: right;
-    }
-
-    .btn-action {
-      background-color: transparent;
-      border: 1px solid var(--border);
+    .brand-text span {
+      font-weight: 400;
       color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
+      margin-left: 4px;
+    }
+
+    .top-controls {
+      display: flex;
       align-items: center;
-      gap: 6px;
-    }
-
-    .btn-action:hover {
-      border-color: #fff;
-      color: #fff;
-    }
-
-    .btn-action.rates-btn {
-      border-color: var(--highlight);
-      color: var(--highlight);
-      background: rgba(56, 189, 248, 0.08);
-    }
-
-    .btn-action.rates-btn:hover {
-      background-color: var(--highlight);
-      color: #0b1329;
-    }
-
-    .btn-action.danger {
-      border-color: var(--danger);
-      color: #fca5a5;
-    }
-
-    .btn-action.danger:hover {
-      background-color: var(--danger);
-      color: #fff;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-bottom: 24px;
-    }
-
-    .summary-card {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
-    }
-
-    .summary-card.highlight {
-      border: 2px solid var(--accent);
-      background: linear-gradient(145deg, #131f37, #1e3a5f);
-    }
-
-    .summary-card.markup-card {
-      border: 2px solid var(--markup-color);
-      background: linear-gradient(145deg, #131f37, #382d15);
-    }
-
-    .summary-card .lbl {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-    }
-
-    .summary-card .val {
-      font-size: 1.45rem;
-      font-weight: 700;
-      color: #fff;
-      margin-top: 4px;
-    }
-
-    .summary-card .sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-
-    .tab-btn {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .tab-btn.active {
-      background-color: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    .capability-section {
-      display: none;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .capability-section.active {
-      display: grid;
-    }
-
-    .cap-card {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .cap-header {
-      font-size: 0.98rem;
-      font-weight: 700;
-      color: var(--highlight);
-      margin-bottom: 4px;
-    }
-
-    .cap-rate-note {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      display: block;
-    }
-
-    .input-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 8px;
-    }
-
-    .input-row label {
-      font-size: 0.82rem;
-      color: var(--text);
-      flex: 1;
-    }
-
-    .input-row input[type="number"] {
-      width: 105px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: #0b1329;
-      color: #fff;
-      font-size: 0.85rem;
-      text-align: right;
-    }
-
-    .input-row select {
-      width: 155px;
-      padding: 4px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: #0b1329;
-      color: #fff;
-      font-size: 0.82rem;
-    }
-
-    .consumption-badge {
-      background-color: var(--badge-bg);
-      border: 1px dashed var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-top: 10px;
-      font-size: 0.79rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .consumption-badge span.metric-val {
-      font-weight: 700;
-      color: var(--highlight);
-    }
-
-    .consumption-badge span.cost-val {
-      font-weight: 700;
-      color: var(--success);
-    }
-
-    .bom-container {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-
-    .bom-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.83rem;
-    }
-
-    th, td {
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }
-
-    th {
-      background-color: #0b1329;
-      color: var(--text-muted);
-    }
-
-    td.num, th.num {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .share-bar-container {
+    .commercial-box {
       display: flex;
       align-items: center;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
       gap: 6px;
-      justify-content: flex-end;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #334155;
     }
 
-    .share-bar {
-      height: 6px;
-      background-color: var(--accent);
-      border-radius: 3px;
+    .commercial-box input {
+      width: 50px;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      padding: 3px 5px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: right;
+      color: #0f172a;
     }
 
     .btn {
-      background-color: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
     }
 
-    .btn:hover {
-      background-color: var(--accent-hover);
+    .btn-outline {
+      background: transparent;
+      border-color: #cbd5e1;
+      color: #475569;
     }
 
-    .btn.secondary {
-      background-color: transparent;
-      border: 1px solid var(--border);
+    .btn-outline:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .btn-purple {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-purple:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Category Filter Pills */
+    .filter-bar {
+      max-width: 1320px;
+      margin: 20px auto 10px;
+      padding: 0 20px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .filter-pill {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 9999px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .filter-pill:hover {
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    .filter-pill.active {
+      background: #581c87;
+      color: #ffffff;
+      border-color: #581c87;
+    }
+
+    /* Main Grid Layout */
+    .main-layout {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cards-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Capability Card */
+    .calc-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+    }
+
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .card-titles h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-titles .rate-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .card-inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .input-block label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .input-block input {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-block input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+    }
+
+    .input-block .input-help {
+      font-size: 0.73rem;
+      color: var(--text-sub);
+      font-style: italic;
+      margin-top: 5px;
+      display: block;
+    }
+
+    /* Formula Banner */
+    .formula-banner {
+      background-color: var(--purple-formula-bg);
+      border: 1px solid var(--purple-formula-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--purple-formula-text);
+      margin-bottom: 18px;
+    }
+
+    .formula-banner svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Card Footer Cost */
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 6px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 14px;
+    }
+
+    .card-footer .cost-label {
+      font-size: 0.9rem;
+      font-weight: 500;
       color: var(--text-muted);
     }
 
-    .btn.secondary:hover {
-      border-color: #fff;
-      color: #fff;
+    .card-footer .cost-val {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--purple-cost);
+      font-variant-numeric: tabular-nums;
     }
 
-    /* Rate Card Modal */
+    /* Purple Summary Widget */
+    .summary-widget {
+      background: var(--purple-summary-bg);
+      border-radius: 16px;
+      padding: 24px;
+      color: #ffffff;
+      position: sticky;
+      top: 80px;
+      box-shadow: 0 10px 25px -5px rgba(46, 16, 101, 0.35);
+    }
+
+    .summary-widget h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #c4b5fd;
+      margin-bottom: 16px;
+    }
+
+    .summary-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 16px;
+    }
+
+    .summary-items::-webkit-scrollbar {
+      width: 4px;
+    }
+    .summary-items::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .summary-row .name {
+      color: #e9d5ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 230px;
+    }
+
+    .summary-row .val {
+      font-weight: 700;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .summary-divider {
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      margin: 16px 0;
+    }
+
+    .summary-total-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .total-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .total-amount-box {
+      text-align: right;
+    }
+
+    .total-amount {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--teal-total);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .monthly-sub {
+      font-size: 0.82rem;
+      color: #c084fc;
+      margin-top: 4px;
+    }
+
+    .commercial-breakdown {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255,255,255,0.15);
+      font-size: 0.8rem;
+      color: #d8b4fe;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .commercial-breakdown span b {
+      color: #ffffff;
+    }
+
+    /* Modal for Rate Card */
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background-color: rgba(0, 0, 0, 0.75);
+      background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(4px);
-      z-index: 999;
+      z-index: 100;
       align-items: center;
       justify-content: center;
       padding: 20px;
@@ -396,815 +470,868 @@
       display: flex;
     }
 
-    .modal-box {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    .modal-card {
+      background: #ffffff;
+      border-radius: 12px;
       width: 100%;
       max-width: 820px;
-      max-height: 90vh;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
     .modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
+      padding: 16px 22px;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .modal-header h3 {
-      color: #fff;
-      font-size: 1.15rem;
-    }
-
-    .modal-content {
-      padding: 16px 20px;
+    .modal-body {
+      padding: 16px 22px;
       overflow-y: auto;
       flex: 1;
     }
 
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 0 0 12px 12px;
+    }
+
     .rate-table {
       width: 100%;
-      margin-top: 8px;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .rate-table th, .rate-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    .rate-table th {
+      color: #64748b;
+      background: #f8fafc;
+      text-transform: uppercase;
+      font-size: 0.7rem;
     }
 
     .rate-table input {
       width: 110px;
-      padding: 4px 8px;
+      border: 1px solid #cbd5e1;
       border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: #0b1329;
-      color: var(--highlight);
-      font-weight: 700;
-      font-size: 0.85rem;
+      padding: 4px 6px;
       text-align: right;
-    }
-
-    .modal-footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      background-color: #0d1628;
-    }
-
-    .modal-footer .left-btns, .modal-footer .right-btns {
-      display: flex;
-      gap: 8px;
+      font-weight: 700;
+      color: #581c87;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div>
-      <h1>Dynatrace Platform Subscription (DPS) Estimator</h1>
-      <p class="subtitle">Customizable Rate Card Catalog &bull; Workload Sizing Engine</p>
-    </div>
-    <div class="commercial-bar">
-      <button class="btn-action rates-btn" onclick="openRateModal()">⚙️ Rate Card Settings</button>
-      <div class="commercial-item">
-        <label for="discount">Vendor Discount (%):</label>
-        <input type="number" id="discount" value="0" min="0" max="100" step="0.5">
-      </div>
-      <div class="commercial-item">
-        <label for="markup">Additional Markup (%):</label>
-        <input type="number" id="markup" value="0" min="0" max="500" step="0.5">
-      </div>
-      <button class="btn-action danger" onclick="resetAllToZero()">Reset to 0</button>
-      <button class="btn-action" onclick="loadSampleProfile()">Load Demo</button>
-    </div>
-  </header>
+<header>
+  <div class="nav-container">
+    <a href="#" class="brand">
+      <div class="brand-badge">D</div>
+      <div class="brand-text">DPS <span>Cost Calculator</span></div>
+    </a>
 
-  <!-- High-Level Financial Metrics -->
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="lbl">Monthly List Cost</div>
-      <div class="val" id="disp-monthly-list">$0.00</div>
-      <div class="sub">Active Rate Card Total</div>
-    </div>
-    <div class="summary-card">
-      <div class="lbl">Monthly Vendor Net</div>
-      <div class="val" id="disp-monthly-net" style="color: var(--success);">$0.00</div>
-      <div class="sub">After Applied Discount</div>
-    </div>
-    <div class="summary-card highlight">
-      <div class="lbl">Monthly Client Billable</div>
-      <div class="val" id="disp-monthly-client" style="color: var(--highlight);">$0.00</div>
-      <div class="sub">Vendor Net + Markup Applied</div>
-    </div>
-    <div class="summary-card markup-card">
-      <div class="lbl">Annual Client Commitment</div>
-      <div class="val" id="disp-annual-client" style="color: var(--markup-color);">$0.00</div>
-      <div class="sub">12-Month SOW Total</div>
-    </div>
-    <div class="summary-card">
-      <div class="lbl">Annual Projected Margin</div>
-      <div class="val" id="disp-annual-margin">$0.00</div>
-      <div class="sub">Markup Revenue Spread</div>
+    <div class="top-controls">
+      <div class="commercial-box">
+        <span>Vendor Discount:</span>
+        <input type="number" id="vendor-discount" value="0" min="0" max="100" step="0.5">
+        <span>%</span>
+      </div>
+
+      <div class="commercial-box">
+        <span>Client Markup:</span>
+        <input type="number" id="client-markup" value="0" min="0" max="500" step="0.5">
+        <span>%</span>
+      </div>
+
+      <button class="btn btn-outline" onclick="openRateModal()">Edit Rates</button>
+      <button class="btn btn-outline" onclick="resetAllInputs()">Reset All</button>
+      <button class="btn btn-purple" onclick="exportCSV()">Export CSV</button>
     </div>
   </div>
+</header>
 
-  <!-- Tab Navigation -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('sec-host')">Host &amp; Container</button>
-    <button class="tab-btn" onclick="switchTab('sec-appsec')">AppSec</button>
-    <button class="tab-btn" onclick="switchTab('sec-dem')">DEM &amp; Synthetics</button>
-    <button class="tab-btn" onclick="switchTab('sec-grail-logs')">Grail Logs</button>
-    <button class="tab-btn" onclick="switchTab('sec-grail-traces')">Grail Traces</button>
-    <button class="tab-btn" onclick="switchTab('sec-grail-events')">Grail Events &amp; Metrics</button>
-    <button class="tab-btn" onclick="switchTab('sec-cloud')">Automation &amp; Extensions</button>
-  </div>
-
-  <!-- 1. Host & Container Monitoring -->
-  <div id="sec-host" class="capability-section active">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Full-Stack Monitoring</div>
-        <span class="cap-rate-note" id="lbl-rate-fs">Rate: $0.0100 / memory-GiB-hour</span>
-        <div class="input-row">
-          <label>Monitored Hosts:</label>
-          <input type="number" id="host-fs-count" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Avg Host Memory (GiB):</label>
-          <input type="number" id="host-fs-ram" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-fs-mem">0 mem-GiB-hrs</span></span>
-        <span class="cost-val" id="badge-fs-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Infrastructure Monitoring</div>
-        <span class="cap-rate-note" id="lbl-rate-infra">Rate: $0.0400 / host-hour</span>
-        <div class="input-row">
-          <label>Infra-Only Hosts:</label>
-          <input type="number" id="host-infra-count" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-infra-hrs">0 host-hrs</span></span>
-        <span class="cost-val" id="badge-infra-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Foundation &amp; Discovery</div>
-        <span class="cap-rate-note" id="lbl-rate-foundation">Rate: $0.0100 / host-hour</span>
-        <div class="input-row">
-          <label>Discovery-Only Hosts:</label>
-          <input type="number" id="host-discovery-count" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-disc-hrs">0 host-hrs</span></span>
-        <span class="cost-val" id="badge-disc-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Mainframe Monitoring</div>
-        <span class="cap-rate-note" id="lbl-rate-mainframe">Rate: $0.1000 / MSU-hour</span>
-        <div class="input-row">
-          <label>MSU Capacity:</label>
-          <input type="number" id="host-mainframe-msu" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-msu-hrs">0 MSU-hrs</span></span>
-        <span class="cost-val" id="badge-msu-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Kubernetes Platform Monitoring</div>
-        <span class="cap-rate-note" id="lbl-rate-k8s">Rate: $0.0020 / pod-hour</span>
-        <div class="input-row">
-          <label>Concurrent Pods:</label>
-          <input type="number" id="cont-k8s-pods" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-k8s-podhrs">0 pod-hrs</span></span>
-        <span class="cost-val" id="badge-k8s-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Code Monitoring</div>
-        <span class="cap-rate-note" id="lbl-rate-code">Rate: $0.0050 / container-hour</span>
-        <div class="input-row">
-          <label>Monitored Containers:</label>
-          <input type="number" id="cont-code-containers" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-code-hrs">0 container-hrs</span></span>
-        <span class="cost-val" id="badge-code-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. Application Security -->
-  <div id="sec-appsec" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Runtime Vulnerability Analytics (RVA)</div>
-        <span class="cap-rate-note" id="lbl-rate-rva">Rate: $0.00225 / memory-GiB-hour</span>
-        <div class="input-row">
-          <label>Hosts with RVA:</label>
-          <input type="number" id="appsec-rva-hosts" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Avg Host Memory (GiB):</label>
-          <input type="number" id="appsec-rva-ram" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-rva-mem">0 mem-GiB-hrs</span></span>
-        <span class="cost-val" id="badge-rva-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Runtime Application Protection (RAP)</div>
-        <span class="cap-rate-note" id="lbl-rate-rap">Rate: $0.00225 / memory-GiB-hour</span>
-        <div class="input-row">
-          <label>Hosts with RAP:</label>
-          <input type="number" id="appsec-rap-hosts" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Avg Host Memory (GiB):</label>
-          <input type="number" id="appsec-rap-ram" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-rap-mem">0 mem-GiB-hrs</span></span>
-        <span class="cost-val" id="badge-rap-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Security Posture Management</div>
-        <span class="cap-rate-note" id="lbl-rate-posture">Rate: $0.0070 / host-hour</span>
-        <div class="input-row">
-          <label>Monitored Hosts:</label>
-          <input type="number" id="appsec-posture-hosts" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-posture-hrs">0 host-hrs</span></span>
-        <span class="cost-val" id="badge-posture-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. DEM & Synthetics -->
-  <div id="sec-dem" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Real User Monitoring (RUM)</div>
-        <span class="cap-rate-note" id="lbl-rate-rum">Rate: $0.00225 / session</span>
-        <div class="input-row">
-          <label>Monthly Sessions:</label>
-          <input type="number" id="dem-rum-sessions" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-rum-sessions">0 sessions</span></span>
-        <span class="cost-val" id="badge-rum-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">RUM with Session Replay</div>
-        <span class="cap-rate-note" id="lbl-rate-replay">Rate: $0.0045 / replay capture</span>
-        <div class="input-row">
-          <label>Monthly Replay Captures:</label>
-          <input type="number" id="dem-replay-sessions" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-replay-sessions">0 captures</span></span>
-        <span class="cost-val" id="badge-replay-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">RUM Property</div>
-        <span class="cap-rate-note" id="lbl-rate-property">Rate: $0.0001 / property-session</span>
-        <div class="input-row">
-          <label>Monthly Property-Sessions:</label>
-          <input type="number" id="dem-properties" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-prop-sessions">0 prop-sessions</span></span>
-        <span class="cost-val" id="badge-prop-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Browser Monitor or Clickpath</div>
-        <span class="cap-rate-note" id="lbl-rate-browser">Rate: $0.0045 / synthetic action</span>
-        <div class="input-row">
-          <label>Monthly Synthetic Actions:</label>
-          <input type="number" id="dem-browser-actions" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-synth-actions">0 actions</span></span>
-        <span class="cost-val" id="badge-synth-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">HTTP Monitor</div>
-        <span class="cap-rate-note" id="lbl-rate-http">Rate: $0.0010 / synthetic request</span>
-        <div class="input-row">
-          <label>Monthly HTTP Requests:</label>
-          <input type="number" id="dem-http-requests" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-http-reqs">0 requests</span></span>
-        <span class="cost-val" id="badge-http-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Third-Party Synthetic Ingestion</div>
-        <span class="cap-rate-note" id="lbl-rate-3rd">Rate: $0.0010 / result</span>
-        <div class="input-row">
-          <label>Monthly 3rd-Party Results:</label>
-          <input type="number" id="dem-third-party" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-3rd-results">0 results</span></span>
-        <span class="cost-val" id="badge-3rd-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Grail Logs -->
-  <div id="sec-grail-logs" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Log Management - Ingest &amp; Process</div>
-        <span class="cap-rate-note" id="lbl-rate-log-ingest">Rate: $0.2000 / GiB</span>
-        <div class="input-row">
-          <label>Daily Ingest Volume (GiB/day):</label>
-          <input type="number" id="logs-ingest-day" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-log-ingest">0 GiB / mo</span></span>
-        <span class="cost-val" id="badge-log-ingest-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Log Retention Mode</div>
-        <span class="cap-rate-note" id="lbl-rate-log-retain">Standard vs Bundled Queries</span>
-        <div class="input-row">
-          <label>Retention Window (Days):</label>
-          <input type="number" id="logs-retention-days" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Pricing Model:</label>
-          <select id="logs-retention-mode">
-            <option value="standard">Standard Retention</option>
-            <option value="included-queries">Bundled Queries</option>
-          </select>
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-log-retain">0 GiB-days</span></span>
-        <span class="cost-val" id="badge-log-retain-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Log DQL Query Scans</div>
-        <span class="cap-rate-note" id="lbl-rate-log-query">Rate: $0.0035 / GiB scanned</span>
-        <div class="input-row">
-          <label>Monthly GiB Scanned:</label>
-          <input type="number" id="logs-query-scanned" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-log-query">0 GiB scanned</span></span>
-        <span class="cost-val" id="badge-log-query-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5. Grail Traces -->
-  <div id="sec-grail-traces" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Traces - Ingest &amp; Process</div>
-        <span class="cap-rate-note" id="lbl-rate-trace-ingest">Rate: $0.2000 / GiB</span>
-        <div class="input-row">
-          <label>Daily Trace Volume (GiB/day):</label>
-          <input type="number" id="traces-ingest-day" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-trace-ingest">0 GiB / mo</span></span>
-        <span class="cost-val" id="badge-trace-ingest-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Traces - Retain</div>
-        <span class="cap-rate-note" id="lbl-rate-trace-retain">Rate: $0.0007 / GiB-day</span>
-        <div class="input-row">
-          <label>Retention Window (Days):</label>
-          <input type="number" id="traces-retention-days" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-trace-retain">0 GiB-days</span></span>
-        <span class="cost-val" id="badge-trace-retain-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Traces - Query Scans</div>
-        <span class="cap-rate-note" id="lbl-rate-trace-query">Rate: $0.0035 / GiB scanned</span>
-        <div class="input-row">
-          <label>Monthly GiB Scanned:</label>
-          <input type="number" id="traces-query-scanned" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-trace-query">0 GiB scanned</span></span>
-        <span class="cost-val" id="badge-trace-query-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. Grail Events & Metrics -->
-  <div id="sec-grail-events" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Business Events - Ingest &amp; Process</div>
-        <span class="cap-rate-note" id="lbl-rate-event-ingest">Rate: $0.2000 / GiB</span>
-        <div class="input-row">
-          <label>Daily Events Ingest (GiB/day):</label>
-          <input type="number" id="events-ingest-day" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-event-ingest">0 GiB / mo</span></span>
-        <span class="cost-val" id="badge-event-ingest-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Business Events - Retain &amp; Query</div>
-        <span class="cap-rate-note" id="lbl-rate-event-retain">Retain &amp; Query Rates</span>
-        <div class="input-row">
-          <label>Event Retention Days:</label>
-          <input type="number" id="events-retention-days" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Monthly Scanned GiB:</label>
-          <input type="number" id="events-query-scanned" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-event-retain">0 GiB-days</span></span>
-        <span class="cost-val" id="badge-event-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Metrics (Grail) - Ingest &amp; Retain</div>
-        <span class="cap-rate-note" id="lbl-rate-metrics">Ingest &amp; Retain Rates</span>
-        <div class="input-row">
-          <label>Monthly Data Points:</label>
-          <input type="number" id="metrics-ingest-points" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Metric Storage (GiB-days/mo):</label>
-          <input type="number" id="metrics-retain-gibdays" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-metric-points">0 points</span></span>
-        <span class="cost-val" id="badge-metric-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. Automation, AppEngine & Classic Extensions -->
-  <div id="sec-cloud" class="capability-section">
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Automation Workflow</div>
-        <span class="cap-rate-note" id="lbl-rate-auto">Rate: $0.0300 / workflow-hour</span>
-        <div class="input-row">
-          <label>Monthly Workflow-Hours:</label>
-          <input type="number" id="auto-workflow-hours" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-auto-hrs">0 workflow-hrs</span></span>
-        <span class="cost-val" id="badge-auto-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">AppEngine Functions - Small</div>
-        <span class="cap-rate-note" id="lbl-rate-appengine">Rate: $0.0010 / invocation</span>
-        <div class="input-row">
-          <label>Monthly Invocations:</label>
-          <input type="number" id="appengine-invocations" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-appengine-calls">0 calls</span></span>
-        <span class="cost-val" id="badge-appengine-cost">$0.00</span>
-      </div>
-    </div>
-
-    <div class="cap-card">
-      <div>
-        <div class="cap-header">Classic Platform Extensions (Legacy)</div>
-        <span class="cap-rate-note">Classic Spans, Events, Serverless</span>
-        <div class="input-row">
-          <label>Spans:</label>
-          <input type="number" id="classic-spans" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Events:</label>
-          <input type="number" id="classic-events" value="0" min="0">
-        </div>
-        <div class="input-row">
-          <label>Serverless Calls:</label>
-          <input type="number" id="classic-serverless" value="0" min="0">
-        </div>
-      </div>
-      <div class="consumption-badge">
-        <span>Consumption: <span class="metric-val" id="badge-classic-calls">0 units</span></span>
-        <span class="cost-val" id="badge-classic-cost">$0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bill of Materials Table -->
-  <div class="bom-container">
-    <div class="bom-header">
-      <div>
-        <h2 style="font-size: 1.1rem; color: #fff;">Bill of Materials (BOM) &amp; Workload Consumption Breakdown</h2>
-        <span style="font-size: 0.78rem; color: var(--text-muted);">Exact consumption metrics mapped to active unit rates</span>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn secondary" onclick="toggleActiveOnly()" id="filter-btn">Show Active SKUs Only</button>
-        <button class="btn" onclick="exportCSV()">Export CSV</button>
-        <button class="btn secondary" onclick="window.print()">Print / PDF</button>
-      </div>
-    </div>
-
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Capability / SKU</th>
-            <th>Monthly Workload Consumption</th>
-            <th class="num">Catalog Unit Rate</th>
-            <th class="num">Monthly List ($)</th>
-            <th class="num">Vendor Net Monthly ($)</th>
-            <th class="num" style="color: var(--markup-color);">Client Monthly ($)</th>
-            <th class="num" style="width: 140px;">Spend Share</th>
-          </tr>
-        </thead>
-        <tbody id="bom-rows"></tbody>
-      </table>
-    </div>
-  </div>
+<div class="filter-bar">
+  <button class="filter-pill active" onclick="filterCategory('all', this)">All Capabilities</button>
+  <button class="filter-pill" onclick="filterCategory('core', this)">Core / Infrastructure</button>
+  <button class="filter-pill" onclick="filterCategory('logs', this)">Log Management</button>
+  <button class="filter-pill" onclick="filterCategory('traces-events', this)">Traces &amp; Events</button>
+  <button class="filter-pill" onclick="filterCategory('appsec', this)">Application Security</button>
+  <button class="filter-pill" onclick="filterCategory('dem', this)">Digital Experience (DEM)</button>
+  <button class="filter-pill" onclick="filterCategory('classic', this)">Classic Extensions</button>
 </div>
 
-<!-- Modal: In-App Rate Card Manager -->
-<div class="modal-backdrop" id="rate-modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div>
-        <h3>Rate Card Settings &amp; SKU Catalog</h3>
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Edit unit rates directly or import/export a JSON file for your team.</span>
-      </div>
-      <button class="btn-action" onclick="closeRateModal()">✕</button>
+<div class="main-layout">
+  <div class="cards-stream" id="cards-container">
     </div>
-    <div class="modal-content">
+
+  <aside class="summary-widget">
+    <h4 id="summary-title">YEARLY COST ESTIMATE</h4>
+    <div class="summary-items" id="summary-list">
+      </div>
+    <div class="summary-divider"></div>
+    <div class="summary-total-block">
+      <div class="total-title">Total yearly cost</div>
+      <div class="total-amount-box">
+        <div class="total-amount" id="total-yearly-val">$0.00</div>
+        <div class="monthly-sub" id="total-monthly-val">≈ $0.00 / month</div>
+      </div>
+    </div>
+    <div class="commercial-breakdown" id="commercial-stats" style="display:none;">
+      <span>Catalog List Yearly: <b id="stat-list">$0.00</b></span>
+      <span>Vendor Net Yearly: <b id="stat-net">$0.00</b></span>
+      <span>Client Billable Yearly: <b id="stat-client">$0.00</b></span>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-backdrop" id="rate-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size:1.1rem; font-weight:700;">Rate Card Catalog &amp; SKU Rates (USD)</h3>
+      <button class="btn btn-outline" onclick="closeRateModal()">✕</button>
+    </div>
+    <div class="modal-body">
       <table class="rate-table">
         <thead>
           <tr>
             <th>Capability</th>
             <th>Unit of Measure</th>
-            <th class="num">Unit Rate (USD)</th>
+            <th style="text-align:right;">Rate (USD)</th>
           </tr>
         </thead>
-        <tbody id="rate-editor-rows"></tbody>
+        <tbody id="rate-table-body"></tbody>
       </table>
     </div>
     <div class="modal-footer">
-      <div class="left-btns">
-        <button class="btn-action" onclick="exportRateCardJSON()">Export JSON</button>
-        <button class="btn-action" onclick="document.getElementById('import-file-input').click()">Import JSON</button>
-        <input type="file" id="import-file-input" style="display:none;" accept=".json" onchange="importRateCardJSON(event)">
-        <button class="btn-action danger" onclick="resetRatesToCatalogDefaults()">Restore Defaults</button>
+      <div>
+        <button class="btn btn-outline" onclick="exportRatesJSON()">Export JSON</button>
+        <button class="btn btn-outline" onclick="document.getElementById('file-import').click()">Import JSON</button>
+        <input type="file" id="file-import" style="display:none;" accept=".json" onchange="importRatesJSON(event)">
+        <button class="btn btn-outline" style="color:#ef4444;" onclick="resetRatesToDefault()">Reset Defaults</button>
       </div>
-      <div class="right-btns">
-        <button class="btn secondary" onclick="closeRateModal()">Cancel</button>
-        <button class="btn" onclick="saveRatesFromModal()">Save &amp; Apply</button>
+      <div>
+        <button class="btn btn-outline" onclick="closeRateModal()">Cancel</button>
+        <button class="btn btn-purple" onclick="saveCustomRates()">Save Rates</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // Immutable Default Official Catalog Rates
-  const DEFAULT_OFFICIAL_RATES = {
-    FULL_STACK: { name: "Full-Stack Monitoring", uom: "per memory-GiB-hour", rate: 0.010 },
-    INFRA: { name: "Infrastructure Monitoring", uom: "per host-hour", rate: 0.040 },
-    FOUNDATION: { name: "Foundation & Discovery", uom: "per host-hour", rate: 0.010 },
-    MAINFRAME: { name: "Mainframe Monitoring", uom: "per MSU-hour", rate: 0.100 },
-    K8S_PODS: { name: "Kubernetes Platform Monitoring", uom: "per pod-hour", rate: 0.002 },
-    CODE_MONITORING: { name: "Code Monitoring", uom: "per container-hour", rate: 0.005 },
-
-    RVA: { name: "Runtime Vulnerability Analytics", uom: "per memory-GiB-hour", rate: 0.00225 },
-    RAP: { name: "Runtime Application Protection", uom: "per memory-GiB-hour", rate: 0.00225 },
-    POSTURE: { name: "Security Posture Management", uom: "per host-hour", rate: 0.007 },
-
-    RUM_SESSIONS: { name: "Real User Monitoring (RUM)", uom: "per session", rate: 0.00225 },
-    RUM_REPLAY: { name: "RUM with Session Replay", uom: "per replay capture", rate: 0.0045 },
-    RUM_PROPERTY: { name: "Real User Monitoring Property", uom: "per property-session", rate: 0.0001 },
-    SYNTH_BROWSER: { name: "Browser Monitor / Clickpath", uom: "per synthetic action", rate: 0.0045 },
-    SYNTH_HTTP: { name: "HTTP Monitor", uom: "per synthetic request", rate: 0.0010 },
-    SYNTH_THIRD_PARTY: { name: "Third-Party Synthetic API", uom: "per result", rate: 0.0010 },
-
-    LOGS_INGEST: { name: "Log Management - Ingest & Process", uom: "per GiB", rate: 0.200 },
-    LOGS_RETAIN_STD: { name: "Log Retention (Standard)", uom: "per GiB-day", rate: 0.0007 },
-    LOGS_QUERY: { name: "Log DQL Query Scans", uom: "per GiB scanned", rate: 0.0035 },
-    LOGS_RETAIN_INCL: { name: "Log Retention (Bundled Queries)", uom: "per GiB-day", rate: 0.0200 },
-
-    TRACES_INGEST: { name: "Traces - Ingest & Process", uom: "per GiB", rate: 0.200 },
-    TRACES_RETAIN: { name: "Traces - Retain", uom: "per GiB-day", rate: 0.0007 },
-    TRACES_QUERY: { name: "Traces - Query Scans", uom: "per GiB scanned", rate: 0.0035 },
-
-    EVENTS_INGEST: { name: "Business Events - Ingest", uom: "per GiB", rate: 0.200 },
-    EVENTS_RETAIN: { name: "Business Events - Retain", uom: "per GiB-day", rate: 0.0007 },
-    EVENTS_QUERY: { name: "Business Events - Query Scans", uom: "per GiB scanned", rate: 0.0035 },
-
-    METRICS_INGEST: { name: "Metrics (Grail) - Ingest", uom: "per data point", rate: 0.0000015 },
-    METRICS_RETAIN: { name: "Metrics (Grail) - Retain", uom: "per GiB-day", rate: 0.0007 },
-
-    AUTOMATION: { name: "Automation Workflows", uom: "per workflow-hour", rate: 0.030 },
-    APPENGINE: { name: "AppEngine Functions - Small", uom: "per invocation", rate: 0.001 },
-
-    CLASSIC_SPANS: { name: "Custom Traces Classic", uom: "per span", rate: 0.0014 },
-    CLASSIC_EVENTS: { name: "Custom Events Classic", uom: "per event", rate: 0.0020 },
-    CLASSIC_SERVERLESS: { name: "Serverless Functions Classic", uom: "per invocation", rate: 0.0040 }
+  // Icon definitions (SVGs)
+  const ICONS = {
+    grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`,
+    server: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>`,
+    search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+    globe: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+    user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    calc: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4h-2V7h2v2zm-4 0h-2V7h2v2zm-4 0H7V7h2v2z"/></svg>`,
+    upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`,
+    database: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>`,
+    file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+    desktop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`
   };
 
-  // Active Rate Card (Initialized from localStorage if previously updated, otherwise defaults)
-  let ACTIVE_RATES = {};
+  // Official default catalog rates
+  const DEFAULT_RATES = {
+    full_stack: 0.010000,
+    infra: 0.040000,
+    foundation: 0.010000,
+    rum: 0.002250,
+    browser_clickpath: 0.004500,
+    http_monitor: 0.001000,
+    
+    logs_ingest: 0.200000,
+    logs_query: 0.003500,
+    logs_retain: 0.000700,
+    logs_classic: 0.001000,
+    
+    rva: 0.002250,
+    rap: 0.002250,
+    posture: 0.007000,
+    code_monitoring: 0.005000,
+    k8s_platform: 0.002000,
+    appengine: 0.001000,
+    mainframe: 0.100000,
+    synthetic_api: 0.001000,
+    rum_replay: 0.004500,
+    rum_property: 0.000100,
+    automation: 0.030000,
+    events_ingest: 0.200000,
+    events_query: 0.003500,
+    events_retain: 0.000700,
+    traces_ingest: 0.200000,
+    traces_query: 0.003500,
+    traces_retain: 0.000700,
+    traces_classic: 0.001400,
+    events_classic: 0.002000,
+    metrics_classic: 0.002000,
+    serverless_classic: 0.004000
+  };
 
-  function loadActiveRates() {
-    const saved = localStorage.getItem('dps_custom_rates_v1');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        ACTIVE_RATES = JSON.parse(JSON.stringify(DEFAULT_OFFICIAL_RATES));
-        for (let k in parsed) {
-          if (ACTIVE_RATES[k]) ACTIVE_RATES[k].rate = parsed[k].rate;
-        }
-        return;
-      } catch (e) {
-        console.warn('Failed to parse saved rates, using defaults', e);
-      }
+  let RATES = { ...DEFAULT_RATES };
+
+  // Load custom rates if saved in localStorage
+  const savedRates = localStorage.getItem('dps_ui_rates');
+  if (savedRates) {
+    try { RATES = { ...DEFAULT_RATES, ...JSON.parse(savedRates) }; } catch(e){}
+  }
+
+  // Schema matching every screenshot
+  const CAPABILITIES = [
+    {
+      id: "full_stack",
+      cat: "core",
+      name: "Full-Stack Monitoring",
+      uomText: "per memory-GiB-hour",
+      rateKey: "full_stack",
+      icon: ICONS.server,
+      formulaText: "hosts × memory (GiB) × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.memory || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 10", sub: "Total number of monitored hosts", def: "" },
+        { key: "memory", label: "AVG MEMORY PER HOST (GIB)", placeholder: "e.g. 8", sub: "Average RAM allocated per host in GiB", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours each host runs per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "infra",
+      cat: "core",
+      name: "Infrastructure Monitoring",
+      uomText: "per host-hour",
+      rateKey: "infra",
+      icon: ICONS.server,
+      formulaText: "hosts × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 50", sub: "Total number of monitored hosts", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours each host runs per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "foundation",
+      cat: "core",
+      name: "Foundation & Discovery",
+      uomText: "per host-hour",
+      rateKey: "foundation",
+      icon: ICONS.search,
+      formulaText: "hosts × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 100", sub: "Total number of monitored hosts", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours each host runs per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "rum",
+      cat: "core dem",
+      name: "Real User Monitoring",
+      uomText: "per session",
+      rateKey: "rum",
+      icon: ICONS.user,
+      formulaText: "sessions/day × days/year × ${rate}",
+      calc: (i, r) => (i.sessions || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "sessions", label: "SESSIONS PER DAY", placeholder: "e.g. 10000", sub: "Average number of user sessions per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "browser_clickpath",
+      cat: "core dem",
+      name: "Browser Monitor or Clickpath",
+      uomText: "per synthetic action",
+      rateKey: "browser_clickpath",
+      icon: ICONS.desktop,
+      formulaText: "monitors × actions × executions/day × locations × days/year × ${rate}",
+      calc: (i, r) => (i.monitors || 0) * (i.actions || 0) * (i.execs || 0) * (i.locs || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "monitors", label: "NUMBER OF MONITORS", placeholder: "e.g. 5", sub: "Number of browser monitors configured", def: "" },
+        { key: "actions", label: "ACTIONS PER EXECUTION", placeholder: "e.g. 3", sub: "Number of synthetic actions (steps) per monitor run", def: "" },
+        { key: "execs", label: "EXECUTIONS PER DAY", placeholder: "e.g. 96 (every 15 min)", sub: "How many times each monitor runs per day", def: "" },
+        { key: "locs", label: "NUMBER OF LOCATIONS", placeholder: "1", sub: "Number of locations each monitor runs from", def: 1 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "http_monitor",
+      cat: "core dem",
+      name: "HTTP Monitor",
+      uomText: "per synthetic request",
+      rateKey: "http_monitor",
+      icon: ICONS.globe,
+      formulaText: "monitors × executions/day × locations × days/year × ${rate}",
+      calc: (i, r) => (i.monitors || 0) * (i.execs || 0) * (i.locs || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "monitors", label: "NUMBER OF MONITORS", placeholder: "e.g. 20", sub: "Number of HTTP monitors configured", def: "" },
+        { key: "execs", label: "EXECUTIONS PER DAY", placeholder: "e.g. 288 (every 5 min)", sub: "How many times each monitor runs per day", def: "" },
+        { key: "locs", label: "NUMBER OF LOCATIONS", placeholder: "1", sub: "Number of locations each monitor runs from", def: 1 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+
+    // Log Management
+    {
+      id: "logs_ingest",
+      cat: "logs",
+      name: "Log Management & Analytics - Ingest & Process",
+      uomText: "per GiB ingested",
+      rateKey: "logs_ingest",
+      icon: ICONS.upload,
+      formulaText: "GiB/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB INGESTED PER DAY", placeholder: "e.g. 50", sub: "Average volume of logs ingested per day in GiB", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "logs_query",
+      cat: "logs",
+      name: "Log Management & Analytics - Query",
+      uomText: "per GiB scanned",
+      rateKey: "logs_query",
+      icon: ICONS.search,
+      formulaText: "GiB scanned/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB SCANNED PER DAY", placeholder: "e.g. 100", sub: "Average volume of logs queried/scanned per day in GiB", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "logs_retain",
+      cat: "logs",
+      name: "Log Management & Analytics - Retain",
+      uomText: "per GiB-day retained",
+      rateKey: "logs_retain",
+      icon: ICONS.database,
+      formulaText: "GiB stored × retention days × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB STORED (AVG)", placeholder: "e.g. 500", sub: "Average volume of retained logs in GiB", def: "" },
+        { key: "days", label: "DAYS RETAINED PER YEAR", placeholder: "35", sub: "Number of days logs are retained (e.g. 35, 365)", def: 35 }
+      ]
+    },
+    {
+      id: "logs_classic",
+      cat: "logs classic",
+      name: "Log Monitoring Classic",
+      uomText: "per log event",
+      rateKey: "logs_classic",
+      icon: ICONS.file,
+      formulaText: "events/day × days/year × ${rate}",
+      calc: (i, r) => (i.events || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "events", label: "LOG EVENTS PER DAY", placeholder: "e.g. 10000000", sub: "Average number of log events per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+
+    // AppSec
+    {
+      id: "rva",
+      cat: "appsec",
+      name: "Runtime Vulnerability Analytics",
+      uomText: "per memory-GiB-hour",
+      rateKey: "rva",
+      icon: ICONS.grid,
+      formulaText: "hosts × GiB × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.memory || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 10", sub: "Total monitored hosts", def: "" },
+        { key: "memory", label: "AVG MEMORY PER HOST (GIB)", placeholder: "e.g. 8", sub: "Average RAM in GiB", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "rap",
+      cat: "appsec",
+      name: "Runtime Application Protection",
+      uomText: "per memory-GiB-hour",
+      rateKey: "rap",
+      icon: ICONS.grid,
+      formulaText: "hosts × GiB × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.memory || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 10", sub: "Total monitored hosts", def: "" },
+        { key: "memory", label: "AVG MEMORY PER HOST (GIB)", placeholder: "e.g. 8", sub: "Average RAM in GiB", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "posture",
+      cat: "appsec",
+      name: "Security Posture Management",
+      uomText: "per host-hour",
+      rateKey: "posture",
+      icon: ICONS.grid,
+      formulaText: "hosts × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 10", sub: "Total monitored hosts", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "code_monitoring",
+      cat: "appsec",
+      name: "Code Monitoring",
+      uomText: "per container-hour",
+      rateKey: "code_monitoring",
+      icon: ICONS.grid,
+      formulaText: "containers × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.containers || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "containers", label: "NUMBER OF CONTAINERS", placeholder: "e.g. 20", sub: "Total monitored containers", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+
+    // Kubernetes & Cloud Compute
+    {
+      id: "k8s_platform",
+      cat: "core",
+      name: "Kubernetes Platform Monitoring",
+      uomText: "per pod-hour",
+      rateKey: "k8s_platform",
+      icon: ICONS.grid,
+      formulaText: "pods × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.pods || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "pods", label: "NUMBER OF PODS", placeholder: "e.g. 100", sub: "Total monitored pods", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "appengine",
+      cat: "core",
+      name: "AppEngine Functions - Small",
+      uomText: "per function invocation",
+      rateKey: "appengine",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.invocations || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "invocations", label: "INVOCATIONS PER DAY", placeholder: "e.g. 1000", sub: "Function invocations per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "mainframe",
+      cat: "core",
+      name: "Mainframe Monitoring",
+      uomText: "per host-hour",
+      rateKey: "mainframe",
+      icon: ICONS.grid,
+      formulaText: "hosts × hours/day × days/year × ${rate}",
+      calc: (i, r) => (i.hosts || 0) * (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hosts", label: "NUMBER OF HOSTS", placeholder: "e.g. 10", sub: "Total monitored hosts", def: "" },
+        { key: "hours", label: "HOURS PER DAY", placeholder: "24", sub: "Average hours per day", def: 24 },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Operational days per year", def: 365 }
+      ]
+    },
+
+    // Synthetics & DEM Replay
+    {
+      id: "synthetic_api",
+      cat: "dem",
+      name: "Third-Party Synthetic API Ingestion",
+      uomText: "per request",
+      rateKey: "synthetic_api",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.requests || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "requests", label: "REQUESTS PER DAY", placeholder: "e.g. 1000", sub: "Third-party synthetic requests per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "rum_replay",
+      cat: "dem",
+      name: "Real User Monitoring with Session Replay",
+      uomText: "per session with replay",
+      rateKey: "rum_replay",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.sessions || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "sessions", label: "SESSIONS WITH REPLAY PER DAY", placeholder: "e.g. 1000", sub: "Sessions with replay capture per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "rum_property",
+      cat: "dem",
+      name: "Real User Monitoring Property",
+      uomText: "per property",
+      rateKey: "rum_property",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.props || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "props", label: "PROPERTIES PER DAY", placeholder: "e.g. 1000", sub: "RUM properties captured per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+
+    // Automation Workflows
+    {
+      id: "automation",
+      cat: "core",
+      name: "Automation Workflow",
+      uomText: "per workflow-hour",
+      rateKey: "automation",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.hours || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "hours", label: "WORKFLOW HOURS PER DAY", placeholder: "e.g. 10", sub: "Total workflow-hours consumed per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+
+    // Events powered by Grail
+    {
+      id: "events_ingest",
+      cat: "traces-events",
+      name: "Events - Ingest & Process",
+      uomText: "per GiB ingested",
+      rateKey: "events_ingest",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB INGESTED PER DAY", placeholder: "e.g. 1000", sub: "GiB of events ingested per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "events_query",
+      cat: "traces-events",
+      name: "Events - Query",
+      uomText: "per GiB scanned",
+      rateKey: "events_query",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB SCANNED PER DAY", placeholder: "e.g. 1000", sub: "GiB of events scanned per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "events_retain",
+      cat: "traces-events",
+      name: "Events - Retain",
+      uomText: "per GiB-day retained",
+      rateKey: "events_retain",
+      icon: ICONS.grid,
+      formulaText: "GiB stored × retention days × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB STORED (AVG)", placeholder: "e.g. 500", sub: "Average retained volume in GiB", def: "" },
+        { key: "days", label: "RETENTION DAYS", placeholder: "35", sub: "Number of days data is retained", def: 35 }
+      ]
+    },
+
+    // Traces powered by Grail
+    {
+      id: "traces_ingest",
+      cat: "traces-events",
+      name: "Traces - Ingest and Process",
+      uomText: "per GiB ingested",
+      rateKey: "traces_ingest",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB INGESTED PER DAY", placeholder: "e.g. 1000", sub: "GiB of traces ingested per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "traces_query",
+      cat: "traces-events",
+      name: "Traces - Query",
+      uomText: "per GiB scanned",
+      rateKey: "traces_query",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB SCANNED PER DAY", placeholder: "e.g. 1000", sub: "GiB of traces scanned per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "traces_retain",
+      cat: "traces-events",
+      name: "Traces - Retain",
+      uomText: "per GiB-day retained",
+      rateKey: "traces_retain",
+      icon: ICONS.grid,
+      formulaText: "GiB stored × retention days × ${rate}",
+      calc: (i, r) => (i.gib || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "gib", label: "GIB STORED (AVG)", placeholder: "e.g. 500", sub: "Average retained volume in GiB", def: "" },
+        { key: "days", label: "RETENTION DAYS", placeholder: "35", sub: "Number of days data is retained", def: 35 }
+      ]
+    },
+
+    // Classic Extensions
+    {
+      id: "traces_classic",
+      cat: "classic",
+      name: "Custom Traces Classic",
+      uomText: "per span",
+      rateKey: "traces_classic",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.spans || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "spans", label: "SPANS PER DAY", placeholder: "e.g. 1000", sub: "Number of spans per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "events_classic",
+      cat: "classic",
+      name: "Custom Events Classic",
+      uomText: "per event",
+      rateKey: "events_classic",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.events || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "events", label: "EVENTS PER DAY", placeholder: "e.g. 1000", sub: "Custom events per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "metrics_classic",
+      cat: "classic",
+      name: "Custom Metrics Classic",
+      uomText: "per metric",
+      rateKey: "metrics_classic",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.metrics || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "metrics", label: "METRICS PER DAY", placeholder: "e.g. 1000", sub: "Custom metrics per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
+    },
+    {
+      id: "serverless_classic",
+      cat: "classic",
+      name: "Serverless Functions Classic",
+      uomText: "per invocation",
+      rateKey: "serverless_classic",
+      icon: ICONS.grid,
+      formulaText: "per/day × days/year × ${rate}",
+      calc: (i, r) => (i.invocations || 0) * (i.days || 0) * r,
+      inputs: [
+        { key: "invocations", label: "INVOCATIONS PER DAY", placeholder: "e.g. 1000", sub: "Serverless invocations per day", def: "" },
+        { key: "days", label: "DAYS PER YEAR", placeholder: "365", sub: "Number of operational days per year", def: 365 }
+      ]
     }
-    ACTIVE_RATES = JSON.parse(JSON.stringify(DEFAULT_OFFICIAL_RATES));
+  ];
+
+  let currentCategory = 'all';
+
+  function fmtCurrency(val) {
+    return '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  loadActiveRates();
+  // Render all cards
+  function buildCards() {
+    const container = document.getElementById('cards-container');
+    container.innerHTML = '';
 
-  const DAYS_PER_MONTH = 30.4167;
-  const HOURS_PER_MONTH = 730;
-  let activeOnly = false;
+    CAPABILITIES.forEach(cap => {
+      const card = document.createElement('div');
+      card.className = `calc-card cap-item cap-${cap.cat}`;
+      card.id = `card-${cap.id}`;
 
-  function fmt(n) {
-    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const rate = RATES[cap.rateKey];
+      const rateStr = '$' + rate.toFixed(rate < 0.01 ? 6 : (rate < 0.1 ? 4 : 2));
+      const formulaDisplay = cap.formulaText.replace('${rate}', rateStr);
+
+      let inputsHtml = '';
+      cap.inputs.forEach(inp => {
+        inputsHtml += `
+          <div class="input-block">
+            <label>${inp.label}</label>
+            <input type="number" id="input-${cap.id}-${inp.key}" placeholder="${inp.placeholder}" value="${inp.def}">
+            <span class="input-help">${inp.sub}</span>
+          </div>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-icon">${cap.icon}</div>
+          <div class="card-titles">
+            <h3>${cap.name}</h3>
+            <div class="rate-desc">${cap.uomText} — <span id="ratedisp-${cap.id}">${rateStr}</span></div>
+          </div>
+        </div>
+
+        <div class="card-inputs-grid">
+          ${inputsHtml}
+        </div>
+
+        <div class="formula-banner">
+          ${ICONS.calc}
+          <span id="formuladisp-${cap.id}">Formula: ${formulaDisplay}</span>
+        </div>
+
+        <div class="card-footer">
+          <span class="cost-label">Yearly cost:</span>
+          <span class="cost-val" id="cost-${cap.id}">$0.00</span>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+
+    // Bind event listeners to all inputs
+    document.querySelectorAll('.calc-card input').forEach(inp => {
+      inp.addEventListener('input', calculateAll);
+      inp.addEventListener('change', calculateAll);
+    });
+
+    calculateAll();
   }
 
-  function fmtNum(n) {
-    return Number(n).toLocaleString('en-US', { maximumFractionDigits: 1 });
+  function filterCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const cards = document.querySelectorAll('.calc-card');
+    cards.forEach(c => {
+      if (cat === 'all') {
+        c.style.display = 'block';
+      } else {
+        c.classList.contains(`cap-${cat}`) ? c.style.display = 'block' : c.style.display = 'none';
+      }
+    });
+
+    document.getElementById('summary-title').innerText = cat === 'all' 
+      ? 'YEARLY COST ESTIMATE' 
+      : `YEARLY COST ESTIMATE — ${btn.innerText.toUpperCase()}`;
+
+    calculateAll();
   }
 
-  function switchTab(tabId) {
-    document.querySelectorAll('.capability-section').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    event.target.classList.add('active');
+  function calculateAll() {
+    const discount = Math.min(100, Math.max(0, parseFloat(document.getElementById('vendor-discount').value) || 0)) / 100;
+    const markup = Math.max(0, parseFloat(document.getElementById('client-markup').value) || 0) / 100;
+
+    let totalYearlyList = 0;
+    const summaryList = document.getElementById('summary-list');
+    summaryList.innerHTML = '';
+
+    CAPABILITIES.forEach(cap => {
+      // Gather inputs
+      const vals = {};
+      cap.inputs.forEach(inp => {
+        const elem = document.getElementById(`input-${cap.id}-${inp.key}`);
+        vals[inp.key] = parseFloat(elem.value) || 0;
+      });
+
+      const rate = RATES[cap.rateKey];
+      const yearlyCost = cap.calc(vals, rate);
+      document.getElementById(`cost-${cap.id}`).innerText = fmtCurrency(yearlyCost);
+
+      // Check if visible under current tab
+      const isVisibleTab = (currentCategory === 'all' || cap.cat.includes(currentCategory));
+
+      if (isVisibleTab) {
+        totalYearlyList += yearlyCost;
+
+        // Add to summary widget
+        const row = document.createElement('div');
+        row.className = 'summary-row';
+        row.innerHTML = `
+          <span class="name" title="${cap.name}">${cap.name}</span>
+          <span class="val">${fmtCurrency(yearlyCost)}</span>
+        `;
+        summaryList.appendChild(row);
+      }
+    });
+
+    const vendorNetYearly = totalYearlyList * (1 - discount);
+    const clientBillableYearly = vendorNetYearly * (1 + markup);
+    const clientMonthly = clientBillableYearly / 12;
+
+    document.getElementById('total-yearly-val').innerText = fmtCurrency(clientBillableYearly);
+    document.getElementById('total-monthly-val').innerText = `≈ ${fmtCurrency(clientMonthly)} / month`;
+
+    const statsBox = document.getElementById('commercial-stats');
+    if (discount > 0 || markup > 0) {
+      statsBox.style.display = 'flex';
+      document.getElementById('stat-list').innerText = fmtCurrency(totalYearlyList);
+      document.getElementById('stat-net').innerText = fmtCurrency(vendorNetYearly);
+      document.getElementById('stat-client').innerText = fmtCurrency(clientBillableYearly);
+    } else {
+      statsBox.style.display = 'none';
+    }
   }
 
-  function toggleActiveOnly() {
-    activeOnly = !activeOnly;
-    document.getElementById('filter-btn').innerText = activeOnly ? 'Show All SKUs' : 'Show Active SKUs Only';
-    calculate();
+  function resetAllInputs() {
+    CAPABILITIES.forEach(cap => {
+      cap.inputs.forEach(inp => {
+        const elem = document.getElementById(`input-${cap.id}-${inp.key}`);
+        elem.value = inp.def;
+      });
+    });
+    calculateAll();
   }
 
-  function resetAllToZero() {
-    const inputs = document.querySelectorAll('input[type="number"]');
-    inputs.forEach(i => i.value = 0);
-    document.getElementById('logs-retention-mode').value = 'standard';
-    calculate();
-  }
-
-  function loadSampleProfile() {
-    document.getElementById('discount').value = 10;
-    document.getElementById('markup').value = 15;
-
-    document.getElementById('host-fs-count').value = 25;
-    document.getElementById('host-fs-ram').value = 16;
-    document.getElementById('host-infra-count').value = 10;
-    document.getElementById('cont-k8s-pods').value = 150;
-
-    document.getElementById('appsec-rva-hosts').value = 25;
-    document.getElementById('appsec-rva-ram').value = 16;
-    document.getElementById('appsec-posture-hosts').value = 25;
-
-    document.getElementById('dem-rum-sessions').value = 100000;
-    document.getElementById('dem-replay-sessions').value = 20000;
-    document.getElementById('dem-browser-actions').value = 50000;
-
-    document.getElementById('logs-ingest-day').value = 50;
-    document.getElementById('logs-retention-days').value = 30;
-    document.getElementById('logs-query-scanned').value = 1000;
-
-    document.getElementById('traces-ingest-day').value = 20;
-    document.getElementById('traces-retention-days').value = 10;
-    document.getElementById('traces-query-scanned').value = 500;
-
-    document.getElementById('events-ingest-day').value = 5;
-    document.getElementById('events-retention-days').value = 30;
-    document.getElementById('events-query-scanned').value = 200;
-
-    document.getElementById('auto-workflow-hours').value = 200;
-    document.getElementById('appengine-invocations').value = 50000;
-    calculate();
-  }
-
-  /* --- Rate Card Modal Management --- */
+  /* --- Rate Card Modal & Persistence --- */
   function openRateModal() {
-    const tbody = document.getElementById('rate-editor-rows');
+    const tbody = document.getElementById('rate-table-body');
     tbody.innerHTML = '';
 
-    for (let key in ACTIVE_RATES) {
-      const item = ACTIVE_RATES[key];
+    CAPABILITIES.forEach(cap => {
+      const rate = RATES[cap.rateKey];
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${item.name}</strong></td>
-        <td style="color: var(--text-muted); font-size: 0.78rem;">${item.uom}</td>
-        <td class="num">
-          <input type="number" step="0.000001" min="0" data-key="${key}" value="${item.rate}">
+        <td><strong>${cap.name}</strong></td>
+        <td style="color:#64748b; font-size:0.75rem;">${cap.uomText}</td>
+        <td style="text-align:right;">
+          <input type="number" step="0.000001" min="0" data-key="${cap.rateKey}" value="${rate}">
         </td>
       `;
       tbody.appendChild(tr);
-    }
+    });
 
     document.getElementById('rate-modal').classList.add('open');
   }
@@ -1213,403 +1340,82 @@
     document.getElementById('rate-modal').classList.remove('open');
   }
 
-  function saveRatesFromModal() {
-    const inputs = document.querySelectorAll('#rate-editor-rows input');
-    inputs.forEach(inp => {
-      const key = inp.getAttribute('data-key');
+  function saveCustomRates() {
+    document.querySelectorAll('#rate-table-body input').forEach(inp => {
+      const k = inp.getAttribute('data-key');
       const val = parseFloat(inp.value);
-      if (!isNaN(val) && val >= 0) {
-        ACTIVE_RATES[key].rate = val;
-      }
+      if (!isNaN(val) && val >= 0) RATES[k] = val;
     });
 
-    localStorage.setItem('dps_custom_rates_v1', JSON.stringify(ACTIVE_RATES));
+    localStorage.setItem('dps_ui_rates', JSON.stringify(RATES));
     closeRateModal();
-    updateCardLabels();
-    calculate();
+    buildCards();
   }
 
-  function resetRatesToCatalogDefaults() {
-    if (confirm("Reset all capability rates back to official Dynatrace public catalog list prices?")) {
-      ACTIVE_RATES = JSON.parse(JSON.stringify(DEFAULT_OFFICIAL_RATES));
-      localStorage.removeItem('dps_custom_rates_v1');
-      openRateModal();
-      updateCardLabels();
-      calculate();
+  function resetRatesToDefault() {
+    if (confirm("Restore all official default catalog prices?")) {
+      RATES = { ...DEFAULT_RATES };
+      localStorage.removeItem('dps_ui_rates');
+      closeRateModal();
+      buildCards();
     }
   }
 
-  function exportRateCardJSON() {
-    const blob = new Blob([JSON.stringify(ACTIVE_RATES, null, 2)], { type: 'application/json' });
+  function exportRatesJSON() {
+    const blob = new Blob([JSON.stringify(RATES, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `Dynatrace_DPS_RateCard_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `DPS_RateCard_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
   }
 
-  function importRateCardJSON(event) {
-    const file = event.target.files[0];
+  function importRatesJSON(e) {
+    const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function(evt) {
       try {
-        const imported = JSON.parse(e.target.result);
-        for (let k in imported) {
-          if (ACTIVE_RATES[k] && typeof imported[k].rate === 'number') {
-            ACTIVE_RATES[k].rate = imported[k].rate;
-          }
-        }
-        localStorage.setItem('dps_custom_rates_v1', JSON.stringify(ACTIVE_RATES));
-        openRateModal();
-        updateCardLabels();
-        calculate();
-        alert('Rate card updated successfully from JSON file.');
+        const parsed = JSON.parse(evt.target.result);
+        RATES = { ...DEFAULT_RATES, ...parsed };
+        localStorage.setItem('dps_ui_rates', JSON.stringify(RATES));
+        closeRateModal();
+        buildCards();
+        alert("Rates successfully imported!");
       } catch (err) {
-        alert('Invalid JSON rate card file.');
+        alert("Invalid JSON file.");
       }
     };
     reader.readAsText(file);
-    event.target.value = '';
-  }
-
-  function updateCardLabels() {
-    document.getElementById('lbl-rate-fs').innerText = `Rate: $${ACTIVE_RATES.FULL_STACK.rate.toFixed(4)} / memory-GiB-hr`;
-    document.getElementById('lbl-rate-infra').innerText = `Rate: $${ACTIVE_RATES.INFRA.rate.toFixed(4)} / host-hr`;
-    document.getElementById('lbl-rate-foundation').innerText = `Rate: $${ACTIVE_RATES.FOUNDATION.rate.toFixed(4)} / host-hr`;
-    document.getElementById('lbl-rate-mainframe').innerText = `Rate: $${ACTIVE_RATES.MAINFRAME.rate.toFixed(4)} / MSU-hr`;
-    document.getElementById('lbl-rate-k8s').innerText = `Rate: $${ACTIVE_RATES.K8S_PODS.rate.toFixed(4)} / pod-hr`;
-    document.getElementById('lbl-rate-code').innerText = `Rate: $${ACTIVE_RATES.CODE_MONITORING.rate.toFixed(4)} / container-hr`;
-    document.getElementById('lbl-rate-rva').innerText = `Rate: $${ACTIVE_RATES.RVA.rate.toFixed(5)} / memory-GiB-hr`;
-    document.getElementById('lbl-rate-rap').innerText = `Rate: $${ACTIVE_RATES.RAP.rate.toFixed(5)} / memory-GiB-hr`;
-    document.getElementById('lbl-rate-posture').innerText = `Rate: $${ACTIVE_RATES.POSTURE.rate.toFixed(4)} / host-hr`;
-    document.getElementById('lbl-rate-rum').innerText = `Rate: $${ACTIVE_RATES.RUM_SESSIONS.rate.toFixed(5)} / session`;
-    document.getElementById('lbl-rate-replay').innerText = `Rate: $${ACTIVE_RATES.RUM_REPLAY.rate.toFixed(4)} / capture`;
-    document.getElementById('lbl-rate-property').innerText = `Rate: $${ACTIVE_RATES.RUM_PROPERTY.rate.toFixed(5)} / prop-session`;
-    document.getElementById('lbl-rate-browser').innerText = `Rate: $${ACTIVE_RATES.SYNTH_BROWSER.rate.toFixed(4)} / action`;
-    document.getElementById('lbl-rate-http').innerText = `Rate: $${ACTIVE_RATES.SYNTH_HTTP.rate.toFixed(4)} / request`;
-    document.getElementById('lbl-rate-3rd').innerText = `Rate: $${ACTIVE_RATES.SYNTH_THIRD_PARTY.rate.toFixed(4)} / result`;
-    document.getElementById('lbl-rate-log-ingest').innerText = `Rate: $${ACTIVE_RATES.LOGS_INGEST.rate.toFixed(2)} / GiB`;
-    document.getElementById('lbl-rate-log-query').innerText = `Rate: $${ACTIVE_RATES.LOGS_QUERY.rate.toFixed(4)} / GiB scanned`;
-    document.getElementById('lbl-rate-trace-ingest').innerText = `Rate: $${ACTIVE_RATES.TRACES_INGEST.rate.toFixed(2)} / GiB`;
-    document.getElementById('lbl-rate-trace-retain').innerText = `Rate: $${ACTIVE_RATES.TRACES_RETAIN.rate.toFixed(5)} / GiB-day`;
-    document.getElementById('lbl-rate-trace-query').innerText = `Rate: $${ACTIVE_RATES.TRACES_QUERY.rate.toFixed(4)} / GiB scanned`;
-    document.getElementById('lbl-rate-event-ingest').innerText = `Rate: $${ACTIVE_RATES.EVENTS_INGEST.rate.toFixed(2)} / GiB`;
-    document.getElementById('lbl-rate-auto').innerText = `Rate: $${ACTIVE_RATES.AUTOMATION.rate.toFixed(4)} / workflow-hr`;
-    document.getElementById('lbl-rate-appengine').innerText = `Rate: $${ACTIVE_RATES.APPENGINE.rate.toFixed(4)} / call`;
-  }
-
-  function calculate() {
-    const discount = Math.min(100, Math.max(0, parseFloat(document.getElementById('discount').value) || 0)) / 100;
-    const markup = Math.max(0, parseFloat(document.getElementById('markup').value) || 0) / 100;
-
-    const discountMult = 1 - discount;
-    const markupMult = 1 + markup;
-
-    // 1. Host inputs & consumption
-    const fsHosts = parseFloat(document.getElementById('host-fs-count').value) || 0;
-    const fsRam = parseFloat(document.getElementById('host-fs-ram').value) || 0;
-    const fsMemHours = fsHosts * fsRam * HOURS_PER_MONTH;
-    const fsCost = fsMemHours * ACTIVE_RATES.FULL_STACK.rate;
-    document.getElementById('badge-fs-mem').innerText = `${fmtNum(fsMemHours)} mem-GiB-hrs`;
-    document.getElementById('badge-fs-cost').innerText = fmt(fsCost);
-
-    const infraHosts = parseFloat(document.getElementById('host-infra-count').value) || 0;
-    const infraHours = infraHosts * HOURS_PER_MONTH;
-    const infraCost = infraHours * ACTIVE_RATES.INFRA.rate;
-    document.getElementById('badge-infra-hrs').innerText = `${fmtNum(infraHours)} host-hrs`;
-    document.getElementById('badge-infra-cost').innerText = fmt(infraCost);
-
-    const discHosts = parseFloat(document.getElementById('host-discovery-count').value) || 0;
-    const discHours = discHosts * HOURS_PER_MONTH;
-    const discCost = discHours * ACTIVE_RATES.FOUNDATION.rate;
-    document.getElementById('badge-disc-hrs').innerText = `${fmtNum(discHours)} host-hrs`;
-    document.getElementById('badge-disc-cost').innerText = fmt(discCost);
-
-    const msuCapacity = parseFloat(document.getElementById('host-mainframe-msu').value) || 0;
-    const msuHours = msuCapacity * HOURS_PER_MONTH;
-    const msuCost = msuHours * ACTIVE_RATES.MAINFRAME.rate;
-    document.getElementById('badge-msu-hrs').innerText = `${fmtNum(msuHours)} MSU-hrs`;
-    document.getElementById('badge-msu-cost').innerText = fmt(msuCost);
-
-    const k8sPods = parseFloat(document.getElementById('cont-k8s-pods').value) || 0;
-    const podHours = k8sPods * HOURS_PER_MONTH;
-    const k8sCost = podHours * ACTIVE_RATES.K8S_PODS.rate;
-    document.getElementById('badge-k8s-podhrs').innerText = `${fmtNum(podHours)} pod-hrs`;
-    document.getElementById('badge-k8s-cost').innerText = fmt(k8sCost);
-
-    const codeContainers = parseFloat(document.getElementById('cont-code-containers').value) || 0;
-    const containerHours = codeContainers * HOURS_PER_MONTH;
-    const codeCost = containerHours * ACTIVE_RATES.CODE_MONITORING.rate;
-    document.getElementById('badge-code-hrs').innerText = `${fmtNum(containerHours)} cont-hrs`;
-    document.getElementById('badge-code-cost').innerText = fmt(codeCost);
-
-    // 2. AppSec
-    const rvaHosts = parseFloat(document.getElementById('appsec-rva-hosts').value) || 0;
-    const rvaRam = parseFloat(document.getElementById('appsec-rva-ram').value) || 0;
-    const rvaMemHours = rvaHosts * rvaRam * HOURS_PER_MONTH;
-    const rvaCost = rvaMemHours * ACTIVE_RATES.RVA.rate;
-    document.getElementById('badge-rva-mem').innerText = `${fmtNum(rvaMemHours)} mem-GiB-hrs`;
-    document.getElementById('badge-rva-cost').innerText = fmt(rvaCost);
-
-    const rapHosts = parseFloat(document.getElementById('appsec-rap-hosts').value) || 0;
-    const rapRam = parseFloat(document.getElementById('appsec-rap-ram').value) || 0;
-    const rapMemHours = rapHosts * rapRam * HOURS_PER_MONTH;
-    const rapCost = rapMemHours * ACTIVE_RATES.RAP.rate;
-    document.getElementById('badge-rap-mem').innerText = `${fmtNum(rapMemHours)} mem-GiB-hrs`;
-    document.getElementById('badge-rap-cost').innerText = fmt(rapCost);
-
-    const postureHosts = parseFloat(document.getElementById('appsec-posture-hosts').value) || 0;
-    const postureHours = postureHosts * HOURS_PER_MONTH;
-    const postureCost = postureHours * ACTIVE_RATES.POSTURE.rate;
-    document.getElementById('badge-posture-hrs').innerText = `${fmtNum(postureHours)} host-hrs`;
-    document.getElementById('badge-posture-cost').innerText = fmt(postureCost);
-
-    // 3. DEM
-    const rumSessions = parseFloat(document.getElementById('dem-rum-sessions').value) || 0;
-    const rumCost = rumSessions * ACTIVE_RATES.RUM_SESSIONS.rate;
-    document.getElementById('badge-rum-sessions').innerText = `${fmtNum(rumSessions)} sessions`;
-    document.getElementById('badge-rum-cost').innerText = fmt(rumCost);
-
-    const replaySessions = parseFloat(document.getElementById('dem-replay-sessions').value) || 0;
-    const replayCost = replaySessions * ACTIVE_RATES.RUM_REPLAY.rate;
-    document.getElementById('badge-replay-sessions').innerText = `${fmtNum(replaySessions)} captures`;
-    document.getElementById('badge-replay-cost').innerText = fmt(replayCost);
-
-    const rumProperties = parseFloat(document.getElementById('dem-properties').value) || 0;
-    const propCost = rumProperties * ACTIVE_RATES.RUM_PROPERTY.rate;
-    document.getElementById('badge-prop-sessions').innerText = `${fmtNum(rumProperties)} prop-sessions`;
-    document.getElementById('badge-prop-cost').innerText = fmt(propCost);
-
-    const browserActions = parseFloat(document.getElementById('dem-browser-actions').value) || 0;
-    const synthActionCost = browserActions * ACTIVE_RATES.SYNTH_BROWSER.rate;
-    document.getElementById('badge-synth-actions').innerText = `${fmtNum(browserActions)} actions`;
-    document.getElementById('badge-synth-cost').innerText = fmt(synthActionCost);
-
-    const httpRequests = parseFloat(document.getElementById('dem-http-requests').value) || 0;
-    const synthHttpCost = httpRequests * ACTIVE_RATES.SYNTH_HTTP.rate;
-    document.getElementById('badge-http-reqs').innerText = `${fmtNum(httpRequests)} reqs`;
-    document.getElementById('badge-http-cost').innerText = fmt(synthHttpCost);
-
-    const thirdPartyResults = parseFloat(document.getElementById('dem-third-party').value) || 0;
-    const synthThirdPartyCost = thirdPartyResults * ACTIVE_RATES.SYNTH_THIRD_PARTY.rate;
-    document.getElementById('badge-3rd-results').innerText = `${fmtNum(thirdPartyResults)} results`;
-    document.getElementById('badge-3rd-cost').innerText = fmt(synthThirdPartyCost);
-
-    // 4. Logs
-    const logIngestDay = parseFloat(document.getElementById('logs-ingest-day').value) || 0;
-    const logMonthlyIngestGib = logIngestDay * DAYS_PER_MONTH;
-    const logRetentionDays = parseFloat(document.getElementById('logs-retention-days').value) || 0;
-    const logRetainGibDays = logMonthlyIngestGib * logRetentionDays;
-    const logRetentionMode = document.getElementById('logs-retention-mode').value;
-    const logQueryScanned = parseFloat(document.getElementById('logs-query-scanned').value) || 0;
-
-    const logIngestCost = logMonthlyIngestGib * ACTIVE_RATES.LOGS_INGEST.rate;
-    const logRetainRate = logRetentionMode === 'standard' ? ACTIVE_RATES.LOGS_RETAIN_STD.rate : ACTIVE_RATES.LOGS_RETAIN_INCL.rate;
-    const logRetainCost = logRetainGibDays * logRetainRate;
-    const logQueryCost = logRetentionMode === 'standard' ? logQueryScanned * ACTIVE_RATES.LOGS_QUERY.rate : 0;
-
-    document.getElementById('badge-log-ingest').innerText = `${fmtNum(logMonthlyIngestGib)} GiB / mo`;
-    document.getElementById('badge-log-ingest-cost').innerText = fmt(logIngestCost);
-    document.getElementById('badge-log-retain').innerText = `${fmtNum(logRetainGibDays)} GiB-days`;
-    document.getElementById('badge-log-retain-cost').innerText = fmt(logRetainCost);
-    document.getElementById('badge-log-query').innerText = logRetentionMode === 'standard' ? `${fmtNum(logQueryScanned)} GiB scanned` : 'Included';
-    document.getElementById('badge-log-query-cost').innerText = fmt(logQueryCost);
-
-    // 5. Traces
-    const traceIngestDay = parseFloat(document.getElementById('traces-ingest-day').value) || 0;
-    const traceMonthlyIngestGib = traceIngestDay * DAYS_PER_MONTH;
-    const traceRetentionDays = parseFloat(document.getElementById('traces-retention-days').value) || 0;
-    const traceRetainGibDays = traceMonthlyIngestGib * traceRetentionDays;
-    const traceQueryScanned = parseFloat(document.getElementById('traces-query-scanned').value) || 0;
-
-    const traceIngestCost = traceMonthlyIngestGib * ACTIVE_RATES.TRACES_INGEST.rate;
-    const traceRetainCost = traceRetainGibDays * ACTIVE_RATES.TRACES_RETAIN.rate;
-    const traceQueryCost = traceQueryScanned * ACTIVE_RATES.TRACES_QUERY.rate;
-
-    document.getElementById('badge-trace-ingest').innerText = `${fmtNum(traceMonthlyIngestGib)} GiB / mo`;
-    document.getElementById('badge-trace-ingest-cost').innerText = fmt(traceIngestCost);
-    document.getElementById('badge-trace-retain').innerText = `${fmtNum(traceRetainGibDays)} GiB-days`;
-    document.getElementById('badge-trace-retain-cost').innerText = fmt(traceRetainCost);
-    document.getElementById('badge-trace-query').innerText = `${fmtNum(traceQueryScanned)} GiB scanned`;
-    document.getElementById('badge-trace-query-cost').innerText = fmt(traceQueryCost);
-
-    // 6. Events & Metrics
-    const eventIngestDay = parseFloat(document.getElementById('events-ingest-day').value) || 0;
-    const eventMonthlyIngestGib = eventIngestDay * DAYS_PER_MONTH;
-    const eventRetentionDays = parseFloat(document.getElementById('events-retention-days').value) || 0;
-    const eventRetainGibDays = eventMonthlyIngestGib * eventRetentionDays;
-    const eventQueryScanned = parseFloat(document.getElementById('events-query-scanned').value) || 0;
-
-    const eventIngestCost = eventMonthlyIngestGib * ACTIVE_RATES.EVENTS_INGEST.rate;
-    const eventRetainCost = eventRetainGibDays * ACTIVE_RATES.EVENTS_RETAIN.rate;
-    const eventQueryCost = eventQueryScanned * ACTIVE_RATES.EVENTS_QUERY.rate;
-
-    document.getElementById('badge-event-ingest').innerText = `${fmtNum(eventMonthlyIngestGib)} GiB / mo`;
-    document.getElementById('badge-event-ingest-cost').innerText = fmt(eventIngestCost);
-    document.getElementById('badge-event-retain').innerText = `${fmtNum(eventRetainGibDays)} GiB-days`;
-    document.getElementById('badge-event-cost').innerText = fmt(eventRetainCost + eventQueryCost);
-
-    const metricPoints = parseFloat(document.getElementById('metrics-ingest-points').value) || 0;
-    const metricGibDays = parseFloat(document.getElementById('metrics-retain-gibdays').value) || 0;
-    const metricIngestCost = metricPoints * ACTIVE_RATES.METRICS_INGEST.rate;
-    const metricRetainCost = metricGibDays * ACTIVE_RATES.METRICS_RETAIN.rate;
-    document.getElementById('badge-metric-points').innerText = `${fmtNum(metricPoints)} points`;
-    document.getElementById('badge-metric-cost').innerText = fmt(metricIngestCost + metricRetainCost);
-
-    // 7. Automation & Extensions
-    const workflowHours = parseFloat(document.getElementById('auto-workflow-hours').value) || 0;
-    const autoCost = workflowHours * ACTIVE_RATES.AUTOMATION.rate;
-    document.getElementById('badge-auto-hrs').innerText = `${fmtNum(workflowHours)} workflow-hrs`;
-    document.getElementById('badge-auto-cost').innerText = fmt(autoCost);
-
-    const appEngineCalls = parseFloat(document.getElementById('appengine-invocations').value) || 0;
-    const appEngineCost = appEngineCalls * ACTIVE_RATES.APPENGINE.rate;
-    document.getElementById('badge-appengine-calls').innerText = `${fmtNum(appEngineCalls)} calls`;
-    document.getElementById('badge-appengine-cost').innerText = fmt(appEngineCost);
-
-    const classicSpans = parseFloat(document.getElementById('classic-spans').value) || 0;
-    const classicEvents = parseFloat(document.getElementById('classic-events').value) || 0;
-    const classicServerless = parseFloat(document.getElementById('classic-serverless').value) || 0;
-    const classicCost = (classicSpans * ACTIVE_RATES.CLASSIC_SPANS.rate) + (classicEvents * ACTIVE_RATES.CLASSIC_EVENTS.rate) + (classicServerless * ACTIVE_RATES.CLASSIC_SERVERLESS.rate);
-    document.getElementById('badge-classic-calls').innerText = `${fmtNum(classicSpans + classicEvents + classicServerless)} units`;
-    document.getElementById('badge-classic-cost').innerText = fmt(classicCost);
-
-    // Assemble BOM
-    const bom = [
-      { name: "Full-Stack Monitoring", consumption: `${fmtNum(fsMemHours)} memory-GiB-hours`, rateDesc: `$${ACTIVE_RATES.FULL_STACK.rate.toFixed(4)} / GiB-hr`, cost: fsCost },
-      { name: "Infrastructure Monitoring", consumption: `${fmtNum(infraHours)} host-hours`, rateDesc: `$${ACTIVE_RATES.INFRA.rate.toFixed(4)} / host-hr`, cost: infraCost },
-      { name: "Foundation & Discovery", consumption: `${fmtNum(discHours)} host-hours`, rateDesc: `$${ACTIVE_RATES.FOUNDATION.rate.toFixed(4)} / host-hr`, cost: discCost },
-      { name: "Mainframe Monitoring", consumption: `${fmtNum(msuHours)} MSU-hours`, rateDesc: `$${ACTIVE_RATES.MAINFRAME.rate.toFixed(4)} / MSU-hr`, cost: msuCost },
-      { name: "Kubernetes Platform Monitoring", consumption: `${fmtNum(podHours)} pod-hours`, rateDesc: `$${ACTIVE_RATES.K8S_PODS.rate.toFixed(4)} / pod-hr`, cost: k8sCost },
-      { name: "Code Monitoring", consumption: `${fmtNum(containerHours)} container-hours`, rateDesc: `$${ACTIVE_RATES.CODE_MONITORING.rate.toFixed(4)} / cont-hr`, cost: codeCost },
-
-      { name: "Runtime Vulnerability Analytics (RVA)", consumption: `${fmtNum(rvaMemHours)} memory-GiB-hours`, rateDesc: `$${ACTIVE_RATES.RVA.rate.toFixed(5)} / GiB-hr`, cost: rvaCost },
-      { name: "Runtime Application Protection (RAP)", consumption: `${fmtNum(rapMemHours)} memory-GiB-hours`, rateDesc: `$${ACTIVE_RATES.RAP.rate.toFixed(5)} / GiB-hr`, cost: rapCost },
-      { name: "Security Posture Management", consumption: `${fmtNum(postureHours)} host-hours`, rateDesc: `$${ACTIVE_RATES.POSTURE.rate.toFixed(4)} / host-hr`, cost: postureCost },
-
-      { name: "Real User Monitoring (RUM)", consumption: `${fmtNum(rumSessions)} sessions`, rateDesc: `$${ACTIVE_RATES.RUM_SESSIONS.rate.toFixed(5)} / session`, cost: rumCost },
-      { name: "RUM with Session Replay", consumption: `${fmtNum(replaySessions)} replay captures`, rateDesc: `$${ACTIVE_RATES.RUM_REPLAY.rate.toFixed(4)} / capture`, cost: replayCost },
-      { name: "Real User Monitoring Property", consumption: `${fmtNum(rumProperties)} property-sessions`, rateDesc: `$${ACTIVE_RATES.RUM_PROPERTY.rate.toFixed(5)} / prop`, cost: propCost },
-      { name: "Browser Monitor / Clickpath", consumption: `${fmtNum(browserActions)} synthetic actions`, rateDesc: `$${ACTIVE_RATES.SYNTH_BROWSER.rate.toFixed(4)} / action`, cost: synthActionCost },
-      { name: "HTTP Monitor", consumption: `${fmtNum(httpRequests)} synthetic requests`, rateDesc: `$${ACTIVE_RATES.SYNTH_HTTP.rate.toFixed(4)} / request`, cost: synthHttpCost },
-      { name: "Third-Party Synthetic API", consumption: `${fmtNum(thirdPartyResults)} API results`, rateDesc: `$${ACTIVE_RATES.SYNTH_THIRD_PARTY.rate.toFixed(4)} / result`, cost: synthThirdPartyCost },
-
-      { name: "Grail - Log Ingest & Process", consumption: `${fmtNum(logMonthlyIngestGib)} GiB ingested`, rateDesc: `$${ACTIVE_RATES.LOGS_INGEST.rate.toFixed(2)} / GiB`, cost: logIngestCost },
-      { 
-        name: logRetentionMode === 'standard' ? "Grail - Log Retention (Standard)" : "Grail - Log Retention (Bundled Queries)", 
-        consumption: `${fmtNum(logRetainGibDays)} GiB-days stored`, 
-        rateDesc: logRetentionMode === 'standard' ? `$${ACTIVE_RATES.LOGS_RETAIN_STD.rate.toFixed(5)} / GiB-day` : `$${ACTIVE_RATES.LOGS_RETAIN_INCL.rate.toFixed(4)} / GiB-day`, 
-        cost: logRetainCost 
-      },
-      { 
-        name: "Grail - Log DQL Query Scans", 
-        consumption: logRetentionMode === 'standard' ? `${fmtNum(logQueryScanned)} GiB scanned` : "Included in Bundled SKU", 
-        rateDesc: logRetentionMode === 'standard' ? `$${ACTIVE_RATES.LOGS_QUERY.rate.toFixed(4)} / GiB` : "$0.00", 
-        cost: logQueryCost 
-      },
-
-      { name: "Grail - Trace Ingest & Process", consumption: `${fmtNum(traceMonthlyIngestGib)} GiB ingested`, rateDesc: `$${ACTIVE_RATES.TRACES_INGEST.rate.toFixed(2)} / GiB`, cost: traceIngestCost },
-      { name: "Grail - Trace Retention", consumption: `${fmtNum(traceRetainGibDays)} GiB-days stored`, rateDesc: `$${ACTIVE_RATES.TRACES_RETAIN.rate.toFixed(5)} / GiB-day`, cost: traceRetainCost },
-      { name: "Grail - Trace Query Scans", consumption: `${fmtNum(traceQueryScanned)} GiB scanned`, rateDesc: `$${ACTIVE_RATES.TRACES_QUERY.rate.toFixed(4)} / GiB`, cost: traceQueryCost },
-
-      { name: "Grail - Business Events Ingest", consumption: `${fmtNum(eventMonthlyIngestGib)} GiB ingested`, rateDesc: `$${ACTIVE_RATES.EVENTS_INGEST.rate.toFixed(2)} / GiB`, cost: eventIngestCost },
-      { name: "Grail - Business Events Retain", consumption: `${fmtNum(eventRetainGibDays)} GiB-days stored`, rateDesc: `$${ACTIVE_RATES.EVENTS_RETAIN.rate.toFixed(5)} / GiB-day`, cost: eventRetainCost },
-      { name: "Grail - Business Events Query", consumption: `${fmtNum(eventQueryScanned)} GiB scanned`, rateDesc: `$${ACTIVE_RATES.EVENTS_QUERY.rate.toFixed(4)} / GiB`, cost: eventQueryCost },
-
-      { name: "Grail - Metrics Ingest & Process", consumption: `${fmtNum(metricPoints)} datapoints`, rateDesc: `$${ACTIVE_RATES.METRICS_INGEST.rate.toFixed(7)} / pt`, cost: metricIngestCost },
-      { name: "Grail - Metrics Retain", consumption: `${fmtNum(metricGibDays)} GiB-days stored`, rateDesc: `$${ACTIVE_RATES.METRICS_RETAIN.rate.toFixed(5)} / GiB-day`, cost: metricRetainCost },
-
-      { name: "Cloud Automation Workflows", consumption: `${fmtNum(workflowHours)} workflow-hours`, rateDesc: `$${ACTIVE_RATES.AUTOMATION.rate.toFixed(4)} / wf-hr`, cost: autoCost },
-      { name: "AppEngine Functions - Small", consumption: `${fmtNum(appEngineCalls)} invocations`, rateDesc: `$${ACTIVE_RATES.APPENGINE.rate.toFixed(4)} / call`, cost: appEngineCost },
-
-      { name: "Custom Traces Classic", consumption: `${fmtNum(classicSpans)} spans`, rateDesc: `$${ACTIVE_RATES.CLASSIC_SPANS.rate.toFixed(4)} / span`, cost: classicSpans * ACTIVE_RATES.CLASSIC_SPANS.rate },
-      { name: "Custom Events Classic", consumption: `${fmtNum(classicEvents)} events`, rateDesc: `$${ACTIVE_RATES.CLASSIC_EVENTS.rate.toFixed(4)} / event`, cost: classicEvents * ACTIVE_RATES.CLASSIC_EVENTS.rate },
-      { name: "Serverless Functions Classic", consumption: `${fmtNum(classicServerless)} invocations`, rateDesc: `$${ACTIVE_RATES.CLASSIC_SERVERLESS.rate.toFixed(4)} / call`, cost: classicServerless * ACTIVE_RATES.CLASSIC_SERVERLESS.rate }
-    ];
-
-    let totalList = 0;
-    let totalNet = 0;
-    let totalClient = 0;
-
-    bom.forEach(i => totalList += i.cost);
-    totalNet = totalList * discountMult;
-    totalClient = totalNet * markupMult;
-
-    const tbody = document.getElementById('bom-rows');
-    tbody.innerHTML = '';
-
-    bom.forEach(item => {
-      const listCost = item.cost;
-      const netCost = listCost * discountMult;
-      const clientCost = netCost * markupMult;
-      const sharePct = totalList > 0 ? ((listCost / totalList) * 100) : 0;
-
-      if (activeOnly && listCost === 0) return;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${item.name}</strong></td>
-        <td><span style="font-weight:600; color:var(--highlight);">${item.consumption}</span></td>
-        <td class="num">${item.rateDesc}</td>
-        <td class="num">${fmt(listCost)}</td>
-        <td class="num" style="color: var(--success);">${fmt(netCost)}</td>
-        <td class="num" style="color: var(--markup-color); font-weight: 700;">${fmt(clientCost)}</td>
-        <td class="num">
-          <div class="share-bar-container">
-            <span>${sharePct.toFixed(1)}%</span>
-            <div class="share-bar" style="width: ${Math.max(2, sharePct * 0.8)}px;"></div>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    const annualClient = totalClient * 12;
-    const annualNet = totalNet * 12;
-    const annualMargin = annualClient - annualNet;
-
-    document.getElementById('disp-monthly-list').innerText = fmt(totalList);
-    document.getElementById('disp-monthly-net').innerText = fmt(totalNet);
-    document.getElementById('disp-monthly-client').innerText = fmt(totalClient);
-    document.getElementById('disp-annual-client').innerText = fmt(annualClient);
-    document.getElementById('disp-annual-margin').innerText = fmt(annualMargin);
   }
 
   function exportCSV() {
-    const disc = document.getElementById('discount').value || 0;
-    const mark = document.getElementById('markup').value || 0;
-    let csv = `Dynatrace Platform Subscription (DPS) Consumption Sizing Estimate\n`;
-    csv += `Active Rate Card Baseline,Vendor Discount: ${disc}%,Client Markup: ${mark}%\n\n`;
-    csv += `Capability / SKU,Monthly Workload Consumption,Active Unit Rate,List Monthly Cost (USD),Vendor Net Monthly (USD),Client Monthly Cost (USD),Spend Share (%)\n`;
+    const disc = document.getElementById('vendor-discount').value || 0;
+    const mark = document.getElementById('client-markup').value || 0;
+    let csv = `Dynatrace Platform Subscription (DPS) Estimate\n`;
+    csv += `Vendor Discount: ${disc}%,Applied Markup: ${mark}%\n\n`;
+    csv += `Capability,Unit of Measure,Catalog Rate (USD),Yearly Cost (USD)\n`;
 
-    const rows = document.querySelectorAll('#bom-rows tr');
-    rows.forEach(r => {
-      const c = r.querySelectorAll('td');
-      csv += `"${c[0].innerText.replace(/"/g, '""')}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace(/[\$,]/g, '')}","${c[4].innerText.replace(/[\$,]/g, '')}","${c[5].innerText.replace(/[\$,]/g, '')}","${c[6].innerText.trim()}"\n`;
+    CAPABILITIES.forEach(cap => {
+      const costText = document.getElementById(`cost-${cap.id}`).innerText.replace(/[\$,]/g, '');
+      const rate = RATES[cap.rateKey];
+      csv += `"${cap.name}","${cap.uomText}",${rate},${costText}\n`;
     });
 
-    csv += `\n,,,Monthly List Total,${document.getElementById('disp-monthly-list').innerText.replace(/[\$,]/g, '')}\n`;
-    csv += `,,,Monthly Vendor Net,${document.getElementById('disp-monthly-net').innerText.replace(/[\$,]/g, '')}\n`;
-    csv += `,,,Monthly Client Billable,${document.getElementById('disp-monthly-client').innerText.replace(/[\$,]/g, '')}\n`;
-    csv += `,,,Annual Client Commitment,${document.getElementById('disp-annual-client').innerText.replace(/[\$,]/g, '')}\n`;
-    csv += `,,,Annual Projected Margin,${document.getElementById('disp-annual-margin').innerText.replace(/[\$,]/g, '')}\n`;
+    csv += `\nTotal Yearly Billable,${document.getElementById('total-yearly-val').innerText.replace(/[\$,]/g, '')}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `DPS_Workload_Consumption_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `DPS_Estimate_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
   }
 
-  document.querySelectorAll('input, select').forEach(elem => {
-    elem.addEventListener('input', calculate);
-    elem.addEventListener('change', calculate);
-  });
+  // Commercial listeners
+  document.getElementById('vendor-discount').addEventListener('input', calculateAll);
+  document.getElementById('client-markup').addEventListener('input', calculateAll);
 
-  // Initial startup
-  updateCardLabels();
-  calculate();
+  // Initialize
+  buildCards();
 </script>
 
 </body>
